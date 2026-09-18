@@ -108,6 +108,12 @@ async function setup() {
     ui.dim("Open a new terminal, then run: fanavaran");
   } else {
     const dest = path.join(userBin, "fanavaran");
+    try {
+      fs.lstatSync(dest);
+      fs.unlinkSync(dest);
+    } catch {
+      /* nothing to replace */
+    }
     fs.writeFileSync(dest, launcherUnix(cliBin));
     fs.chmodSync(dest, 0o755);
     ensureDirOnPathUnix(userBin);
