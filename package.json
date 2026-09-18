@@ -1,0 +1,13 @@
+{
+  "name": "fanavaran",
+  "version": "1.0.0",
+  "description": "Fanavaran local developer CLI (API, Student, Dashboard, Expo app)",
+  "bin": {
+    "fanavaran": "bin/fanavaran.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "license": "UNLICENSED",
+  "private": true
+}
