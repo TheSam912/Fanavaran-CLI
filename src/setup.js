@@ -1,29 +1,19 @@
 "use strict";
 
 const fs = require("fs");
-const os = require("os");
 const path = require("path");
 const { spawnSync } = require("child_process");
 const ui = require("./ui");
 const cfgLib = require("./config");
 const proc = require("./proc");
-
-function launcherUnix(cliBin) {
-  return `#!/usr/bin/env bash
-exec node ${JSON.stringify(cliBin)} "$@"
-`;
-}
-
-function launcherWin(cliBin) {
-  return `@echo off\r\nnode ${JSON.stringify(cliBin)} %*\r\n`;
-}
+const { installUserLauncher } = require("./launcher");
 
 function ensureDirOnPathUnix(binDir) {
+  const os = require("os");
   const rcFiles = [".zshrc", ".bashrc", ".zprofile", ".bash_profile"]
     .map((f) => path.join(os.homedir(), f))
     .filter((f) => fs.existsSync(f));
   const exportLine = `export PATH="${binDir}:$PATH"`;
-  let wrote = false;
   for (const rc of rcFiles) {
     const text = fs.readFileSync(rc, "utf8");
     if (text.includes(binDir) || text.includes("$HOME/bin")) return true;
@@ -33,8 +23,7 @@ function ensureDirOnPathUnix(binDir) {
     target,
     `\n# Fanavaran CLI\n${exportLine}\n`
   );
-  wrote = true;
-  return wrote;
+  return true;
 }
 
 function ensureDirOnPathWin(binDir) {
@@ -94,31 +83,23 @@ async function setup() {
     else ui.warn(`${key.padEnd(10)} missing  ${dir}`);
   }
 
-  const cliBin = path.join(cfgLib.cliRoot(), "bin", "fanavaran.js");
-  const userBin = path.join(os.homedir(), "bin");
-  fs.mkdirSync(userBin, { recursive: true });
-
-  if (proc.isWin) {
-    const cmdPath = path.join(userBin, "fanavaran.cmd");
-    fs.writeFileSync(cmdPath, launcherWin(cliBin));
-    const pathOk = ensureDirOnPathWin(userBin);
-    ui.ok(`launcher  ${cmdPath}`);
-    if (pathOk) ui.ok(`added ${userBin} to your user PATH`);
-    else ui.warn(`add this folder to PATH: ${userBin}`);
-    ui.dim("Open a new terminal, then run: fanavaran");
-  } else {
-    const dest = path.join(userBin, "fanavaran");
-    try {
-      fs.lstatSync(dest);
-      fs.unlinkSync(dest);
-    } catch {
-      /* nothing to replace */
+  try {
+    const installed = installUserLauncher();
+    if (proc.isWin) {
+      const pathOk = ensureDirOnPathWin(installed.binDir);
+      ui.ok(`launcher  ${installed.dest}`);
+      ui.ok(`CLI       ${installed.cliBin}`);
+      if (pathOk) ui.ok(`added ${installed.binDir} to your user PATH`);
+      else ui.warn(`add this folder to PATH: ${installed.binDir}`);
+    } else {
+      ensureDirOnPathUnix(installed.binDir);
+      ui.ok(`launcher  ${installed.dest}`);
+      ui.ok(`CLI       ${installed.cliBin}`);
     }
-    fs.writeFileSync(dest, launcherUnix(cliBin));
-    fs.chmodSync(dest, 0o755);
-    ensureDirOnPathUnix(userBin);
-    ui.ok(`launcher  ${dest}`);
     ui.dim("Open a new terminal, then run: fanavaran");
+  } catch (err) {
+    ui.fail(err.message || String(err));
+    process.exit(1);
   }
 
   ui.blank();

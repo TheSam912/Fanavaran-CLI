@@ -4,6 +4,7 @@ const fs = require("fs");
 const path = require("path");
 const ui = require("./ui");
 const proc = require("./proc");
+const { inspectUserLauncher } = require("./launcher");
 
 function check(ok, pass, failMsg) {
   if (ok) ui.ok(pass);
@@ -18,6 +19,8 @@ async function doctor(cfg) {
   check(true, `Node  ${process.version}`);
   check(Boolean(proc.which("npm") || proc.which("npm.cmd")), "npm on PATH", "npm not found");
   check(Boolean(proc.which("git")), "git on PATH", "git not found");
+  const launcher = inspectUserLauncher();
+  check(launcher.ok, `fanavaran  ${launcher.detail}`, launcher.detail);
   ui.blank();
 
   ui.heading("Workspace");

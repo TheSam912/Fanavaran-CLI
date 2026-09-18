@@ -41,9 +41,10 @@ Open a **new** terminal, then check:
 fanavaran doctor
 ```
 
-If `fanavaran` is not found:
+If `fanavaran` is not found, or you see `Cannot find module .../fanavaran.js`:
 
 ```bash
+cd Fanavaran-CLI
 node bin/fanavaran.js setup
 ```
 
@@ -52,6 +53,8 @@ Path wrong? Fix it:
 ```bash
 fanavaran config set root /full/path/to/fanavaran
 ```
+
+Moved the folder? Run `setup` again. Do not hand-make a symlink to this repo.
 
 ---
 

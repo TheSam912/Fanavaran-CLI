@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+# Safe to symlink: always runs the fanavaran.js next to this file.
+set -euo pipefail
+SOURCE="${BASH_SOURCE[0]}"
+while [ -h "$SOURCE" ]; do
+  DIR="$(cd -P "$(dirname "$SOURCE")" && pwd)"
+  SOURCE="$(readlink "$SOURCE")"
+  [[ "$SOURCE" != /* ]] && SOURCE="$DIR/$SOURCE"
+done
+HERE="$(cd -P "$(dirname "$SOURCE")" && pwd)"
+CLI="$HERE/fanavaran.js"
+if [ ! -f "$CLI" ]; then
+  echo "Fanavaran CLI not found at: $CLI" >&2
+  echo "From the Fanavaran-CLI repo run:  node bin/fanavaran.js setup" >&2
+  exit 1
+fi
+exec node "$CLI" "$@"
